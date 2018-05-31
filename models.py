@@ -17,43 +17,49 @@ class Net(nn.Module):
         ## 2. It ends with a linear layer that represents the keypoints
         ## it's suggested that you make this last layer output 136 values, 2 for each of the 68 keypoint (x, y) pairs
         
-        # As an example, you've been given a convolutional layer, which you may (but don't have to) change:
-        # 1 input image channel (grayscale), 32 output channels/feature maps, 5x5 square convolution kernel
-        # the output Tensor for one image, will have the dimensions: (224-5)/1 + 1 = (32, 220, 220)
-        # after one pool layer, this will become (32, 110, 110)
-        self.conv1 = nn.Conv2d(1, 32, 5)
+        # 1 input image channel (grayscale), 16 output channels/feature maps, 7x7 square convolution kernel
+        # the output Tensor for one image, will have the dimensions: (224-7)/1 + 1 = (16, 218, 218)
+        # after one pool layer, this will become (16, 109, 109)
+        self.conv1 = nn.Conv2d(1, 16, 7)
         
+                
         ## Note that among the layers to add, consider including:
         # maxpooling layers, multiple conv layers, fully-connected layers, and other layers (such as dropout or batch normalization) to avoid overfitting
                 
         # maxpool layer
-        # pool with kernel_size=2, stride=2
+        # pool with kernel_size=2, stride=2 
         self.pool = nn.MaxPool2d(2, 2)
         
-        # second conv layer: 32 inputs, 64 outputs, 5x5 conv
-        ## output size = (W-F)/S +1 = (110-5)/1 +1 = 106
-        # the output tensor will have dimensions: (16, 106, 106)
-        # after another pool layer this will become (16, 53, 53)
-        self.conv2 = nn.Conv2d(32, 64, 5)
+        # second conv layer: 16 inputs, 32 outputs, 5x5 conv
+        # the output Tensor will have the dimensions: (109-5)/1 + 1 = (32, 105, 105)
+        # after one pool layer, this will become (32, 52, 52)
+        self.conv2 = nn.Conv2d(16, 32, 5)
+
         
-        # third conv layer: 64 inputs, 128 outputs, 5x5 conv
-        ## output size = (W-F)/S +1 = (53-5)/1 +1 = 49
-        # the output tensor will have dimensions: (128, 49, 49)
-        # after another pool layer this will become (128, 24, 24)
-        self.conv3 = nn.Conv2d(64, 128, 5)
+        # third conv layer: 32 inputs, 64 outputs, 3x3 conv
+        ## output size = (W-F)/S +1 = (52-3)/1 +1 = 50
+        # the output tensor will have dimensions: (64, 50, 50)
+        # after another pool layer this will become (64, 25, 25)
+        self.conv3 = nn.Conv2d(32, 64, 3)
         
-        # fourth conv layer: 128 inputs, 512 outputs, 3x3 conv
-        ## output size = (W-F)/S +1 = (24-3)/1 +1 = 22
-        # the output tensor will have dimensions: (512, 22, 22)
-        # after another pool layer this will become (512, 11, 11)
-        self.conv4 = nn.Conv2d(128, 512, 3)
+        # fourth conv layer: 64 inputs, 128 outputs, 3x3 conv
+        ## output size = (W-F)/S +1 = (25-3)/1 +1 = 23
+        # the output tensor will have dimensions: (128, 23, 23)
+        # after another pool layer this will become (128, 11, 11)
+        self.conv4 = nn.Conv2d(64, 128, 3)
+        
+        # fifth conv layer: 128 inputs, 512 outputs, 3x3 conv
+        ## output size = (W-F)/S +1 = (11-3)/1 +1 = 9
+        # the output tensor will have dimensions: (512, 9, 9)
+        # after another pool layer this will become (512, 4, 4)
+        self.conv5 = nn.Conv2d(128, 512, 3)
         
         
-        # 512 outputs * the 11,11 filtered/pooled map size
-        self.fc1 = nn.Linear(512*11*11, 1024)
+        # 512 outputs * the 4,4 filtered/pooled map size
+        self.fc1 = nn.Linear(512*4*4, 1024)
         
         # dropout with p=0.4
-        self.fc1_drop = nn.Dropout(p=0.4)
+        self.fc1_drop = nn.Dropout(p=0.6)
         
         # finally, create 10 output channels (2 for each of the 68 keypoint (x, y) pairs)
         self.fc2 = nn.Linear(1024, 136)
@@ -70,6 +76,7 @@ class Net(nn.Module):
         x = self.pool(F.relu(self.conv2(x)))
         x = self.pool(F.relu(self.conv3(x)))
         x = self.pool(F.relu(self.conv4(x)))
+        x = self.pool(F.relu(self.conv5(x)))
         
         # prep for linear layer
         # this line of code is the equivalent of Flatten in Keras
