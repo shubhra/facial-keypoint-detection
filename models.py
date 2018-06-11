@@ -18,10 +18,9 @@ class Net(nn.Module):
         ## it's suggested that you make this last layer output 136 values, 2 for each of the 68 keypoint (x, y) pairs
         
         # 1 input image channel (grayscale), 16 output channels/feature maps, 7x7 square convolution kernel
-        # the output Tensor for one image, will have the dimensions: (224-7)/1 + 1 = (16, 218, 218)
-        # after one pool layer, this will become (16, 109, 109)
+        # the output Tensor for one image, will have the dimensions: (224-7)/1 + 1 = (32, 218, 218)
+        # after one pool layer, this will become (32, 109, 109)
         self.conv1 = nn.Conv2d(1, 16, 7)
-        
                 
         ## Note that among the layers to add, consider including:
         # maxpooling layers, multiple conv layers, fully-connected layers, and other layers (such as dropout or batch normalization) to avoid overfitting
@@ -34,7 +33,6 @@ class Net(nn.Module):
         # the output Tensor will have the dimensions: (109-5)/1 + 1 = (32, 105, 105)
         # after one pool layer, this will become (32, 52, 52)
         self.conv2 = nn.Conv2d(16, 32, 5)
-
         
         # third conv layer: 32 inputs, 64 outputs, 3x3 conv
         ## output size = (W-F)/S +1 = (52-3)/1 +1 = 50
@@ -54,17 +52,12 @@ class Net(nn.Module):
         # after another pool layer this will become (512, 4, 4)
         self.conv5 = nn.Conv2d(128, 512, 3)
         
-        
-        # 512 outputs * the 4,4 filtered/pooled map size
+        # 512 outputs * the 4,124filtered/pooled map size
         self.fc1 = nn.Linear(512*4*4, 1024)
         
-        # dropout with p=0.4
+        # finally, create 136 output channels (2 for each of the 68 keypoint (x, y) pairs)
         self.fc1_drop = nn.Dropout(p=0.6)
-        
-        # finally, create 10 output channels (2 for each of the 68 keypoint (x, y) pairs)
         self.fc2 = nn.Linear(1024, 136)
-
-        
 
         
     def forward(self, x):
