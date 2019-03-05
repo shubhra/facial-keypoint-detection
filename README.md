@@ -30,8 +30,10 @@ The second notebook contains code to:
 * use the transforms from the previous notebook and get the transformed dataset
 * set up hyperparameters,train and tweak, as needed, the CNN on the training data 
 * test how the model performs on the test data
+* visualize the features that the CNN was learning to recognize
+* visualize the feature maps (feature maps are just sets of filtered images; they are the images produced by applying a convolutional kernel to an input image)
 
-The layers in the network architecture that I have look like:  
+The layers in the network architecture that I built look like:  
  
   - (conv1): Conv2d(1, 16, kernel_size=(7, 7), stride=(1, 1))  
   - (pool): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)  
@@ -42,6 +44,47 @@ The layers in the network architecture that I have look like:
   - (fc1): Linear(in_features=8192, out_features=1024, bias=True)  
   - (fc1_drop): Dropout(p=0.6)  
   - (fc2): Linear(in_features=1024, out_features=136, bias=True)  
+ 
+I settled with the current architecture which has 5 convolutional layers and reduces the filter size from 7 to 5 to 3 eventually. This seems to do a decent job but I would have like to try out the one in the paper (perhaps with a GPU setup). Maxpool layer has been added between the first two convolutional layers to avoid overfitting along with a dropout layer (p=0.6) between the two fully connected layers at the end.
+ 
+ Number of Epochs = 3  
+ Loss function = I used the Mean Squared Error loss function - [MSELoss()](https://pytorch.org/docs/master/nn.html?highlight=mseloss#torch.nn.MSELoss)  
+ Optimizer = [RMSProp](https://pytorch.org/docs/master/optim.html#torch.optim.RMSprop)  
+ Learning rate = 0.0001  
+ 
+For the number of epochs, I started with 1 and when I thought I had a decent network I incremented it to 3 and then to 5. But 5 epochs was no better than 3 so I stayed at 3 epochs.  
+MSE loss function is suited for regression, which directly compares a predicted value and target value. I also tried L1Loss but got better results with MSE.   
+The RMSProp optimizer is an adaptive learning rate method which keeps a running average of the local gradient and adapts the learning rate	by	dividing it by	the magnitude of the running gradient. I saw better results with RMSProp than Adam optimizer given my contrained epochs.   
+
+##### Visualizing Features  
+Here is a visualization of the features of a sample test image:  
+![alt text](https://github.com/shubhra/facial-keypoint-detection/blob/master/images/face_filter_sample.png)
+###### First Convolutional Layer sees this:
+It appears that several filters try to detech edges - vertical and horizontal. The 6th one and the last one appear to be trying to blur out noise. The 4th one and the 6th one also seem to be isolating dark and bright regions.
+![alt text](https://github.com/shubhra/facial-keypoint-detection/blob/master/images/face_filter_first_cnn_layer.png)
+###### Last Convolutional Layer sees this:
+ Interestingly, for this layer's set of filtered images, we've reached a point where the network seems to be looking at the images as a whole mostly.
+![alt text](https://github.com/shubhra/facial-keypoint-detection/blob/master/images/face_filter_last_cnn_layer.png)  
+
+#### [3. Facial Keypoint Detection, Complete Pipeline.ipynb](https://nbviewer.jupyter.org/github/shubhra/facial-keypoint-detection/blob/master/3.%20Facial%20Keypoint%20Detection%2C%20Complete%20Pipeline.ipynb)
+
+The third notebook contains code to:
+* detect all faces in an image using OpenCV's [HaarCascade classifier](https://docs.opencv.org/2.4/modules/objdetect/doc/cascade_classification.html?highlight=cascadeclassifier#cascadeclassifier), and its [detectMultiScale](https://docs.opencv.org/2.4/modules/objdetect/doc/cascade_classification.html?highlight=cascadeclassifier#cascadeclassifier-detectmultiscale)) method
+* transform the detected faces to grayscale and then to a tensor
+* use the model trained in the previous network to detect facial keypoints for the detected face
+
+Here's an example image for which a face was detected, changed to grayscale, rescaled, normalized, changed to a tensor and then facial keypoints were also detected:   
+  
+![Original Image](https://github.com/shubhra/facial-keypoint-detection/blob/master/images/mona_lisa.jpg)  
+
+Here's the resulting image with keypoints overlaid on top:  
+  
+![Image with Keypoints](https://github.com/shubhra/facial-keypoint-detection/blob/master/images/mona_lisa_keypoints.png)
+
+As we see, the CNN model does decently well and approximates the keypoints to a good degree. It could certainly be made much better with more time and experimentation. 
+
+
+
 
 
 
